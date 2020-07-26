@@ -1,0 +1,1 @@
+export type RemoteProperties = Record<string, true>;

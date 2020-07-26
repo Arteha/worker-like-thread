@@ -1,1 +1,1 @@
-export * from "./BaseWorker";
+export * from "./WorkerLikeThread";

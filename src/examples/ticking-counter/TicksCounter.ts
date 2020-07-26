@@ -1,18 +1,27 @@
-import { Provide, BaseWorker } from "../..";
-import { Thread } from "../..";
+import { Worker, Provide } from "../../decorators";
 import { InfoDTO } from "./dto/InfoDTO";
 import { TimeDTO } from "./dto/TimeDTO";
+import { WorkerLikeThread } from "../../core";
+import { AsAttributes } from "typed-dto";
 
-@Thread
-export class TicksCounter extends BaseWorker
+@Worker({filePath: __filename})
+export class TicksCounter extends WorkerLikeThread
 {
-    private startedAt: Date;
+    private startedAt: Date = new Date();
     private ticks: number = 0;
 
-    public run()
+    protected run()
     {
         this.startedAt = new Date();
         setInterval(() => this.tick(), 1000);
+
+        this.on("ping", this.onPing.bind(this));
+    }
+
+    private onPing(count: number)
+    {
+        console.log("ping:", ++count);
+        this.emit("pong", count);
     }
 
     @Provide()
@@ -22,8 +31,9 @@ export class TicksCounter extends BaseWorker
     }
 
     @Provide()
-    public async getAllInfo(time: TimeDTO): Promise<InfoDTO>
+    public async getAllInfo(time: AsAttributes<TimeDTO>): Promise<InfoDTO>
     {
+        time = TimeDTO.createOrFail(time);
         return {
             startedAt: this.startedAt,
             timeDifference: Date.now() - time.timestamp.getTime(),

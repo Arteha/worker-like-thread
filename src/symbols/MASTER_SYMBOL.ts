@@ -1,1 +1,0 @@
-export const MASTER_SYMBOL = Symbol("master");

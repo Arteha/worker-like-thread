@@ -1,5 +1,5 @@
 {
-  "name": "worker-as-thread",
+  "name": "worker-like-thread",
   "version": "v0.0.1",
   "description": "Implements a layer of async abstraction over workers giving possibility to interact without codding cross-process communication.",
   "keywords": [
