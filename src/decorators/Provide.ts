@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { REMOTE_ACCESS_SYMBOL } from "../symbols/REMOTE_ACCESS_SYMBOL";
-import { WorkerLikeThread } from "../core/WorkerLikeThread";
+import { WorkerLikeThread } from "../core";
 
 export function Provide()
 {
