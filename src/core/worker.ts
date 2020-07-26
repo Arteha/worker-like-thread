@@ -1,6 +1,4 @@
 import { WorkerExecutionException } from "../exceptions/WorkerExecutionException";
-
-process.env.WORKER_LIKE_THREAD = "YES";
 import { CrossProcessMessage } from "./WorkerLikeThread";
 
 let WorkerClass: any = null;

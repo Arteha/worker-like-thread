@@ -5,8 +5,9 @@
   "keywords": [
     "thread",
     "worker",
-    "fake-thread",
-    "like-thread",
+    "fake thread",
+    "like thread",
+    "nodejs thread",
     "threads",
     "workers",
     "typescript",
@@ -20,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Arteha/worker-as-thread.git"
+    "url": "git+https://github.com/Arteha/worker-like-thread.git"
   },
   "author": "Artem Zabolotnyi <1arteha1@gmail.com>",
   "license": "MIT",
