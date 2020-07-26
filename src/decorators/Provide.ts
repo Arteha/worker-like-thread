@@ -1,6 +1,7 @@
 import "reflect-metadata";
-import { REMOTE_ACCESS_SYMBOL } from "../symbols/REMOTE_ACCESS_SYMBOL";
+import { REMOTE_PROPERTIES_SYMBOL } from "../symbols/REMOTE_PROPERTIES_SYMBOL";
 import { WorkerLikeThread } from "../core";
+import { RemoteProperties } from "../types/remote.properties";
 
 export function Provide()
 {
@@ -9,6 +10,9 @@ export function Provide()
         if (propertyKey == undefined)
             throw new TypeError();
 
-        Reflect.defineMetadata(REMOTE_ACCESS_SYMBOL, true, target, propertyKey);
+        const props: RemoteProperties = Reflect.getMetadata(REMOTE_PROPERTIES_SYMBOL, target) || {};
+        props[propertyKey] = true;
+
+        Reflect.defineMetadata(REMOTE_PROPERTIES_SYMBOL, props, target);
     };
 }

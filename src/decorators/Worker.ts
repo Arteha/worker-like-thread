@@ -9,11 +9,19 @@ export function Worker(settings: WorkerSettings)
 {
     return function <T extends { new(...args: any[]): WorkerLikeThread }>(original: T): T
     {
-        const settingsExtended: WorkerSettingsWithClassName = {
-            ...settings,
-            className: original.constructor.name
-        }
-        Reflect.defineMetadata(WORKER_SETTINGS_SYMBOL, settingsExtended, original);
-        return original;
+        return class extends original
+        {
+            constructor(...args: any[])
+            {
+                super(...args);
+
+                const extendedSettings: WorkerSettingsWithClassName = {
+                    ...settings,
+                    className: original.name
+                };
+                Reflect.defineMetadata(WORKER_SETTINGS_SYMBOL, extendedSettings, this);
+            }
+        } as any;
+        ;
     }
 }

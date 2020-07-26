@@ -34,8 +34,7 @@ process.on("message", async function(message: CrossProcessMessage)
             }".`);
 
         workerInstance = new WorkerClass(...message.data.args);
-        if(workerInstance)
-            await workerInstance.run();
+        workerInstance.run();
 
         sendToMaster({type: "started", data: null});
     }

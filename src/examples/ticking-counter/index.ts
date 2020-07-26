@@ -1,26 +1,41 @@
 import { TicksCounter } from "./TicksCounter";
-import { join } from "path";
+import { InfoDTO } from "./dto/InfoDTO";
+import { sleep } from "./utils/sleep";
 
-(async() =>
+
+(async () =>
 {
-    /*console.log("Running worker...");
-    const worker: TicksCounter = await Executor.run(
-        join(process.cwd(), "lib/examples/ticking-counter/TickingCounter.js"),
-        TicksCounter
-    );
+    console.log("Running worker...");
+    const worker = new TicksCounter();
+    await worker.execute();
     console.log("Worker successfully started.");
 
-    setInterval(async() =>
+    worker.on("pong", async (count: number) =>
     {
-        console.log("Executing remote task:");
+        console.log("pong:", ++count);
+        await sleep(1000);
+        worker.emit("ping", count);
+    });
+
+    worker.emit("ping", 0);
+
+    setInterval(async () =>
+    {
         try
         {
-            console.log(await worker.getTicks());
-            console.log(await worker.getAllInfo({timestamp: new Date()}));
+            const ticks = await worker.getTicks();
+            console.log({ticks});
+
+            const info = InfoDTO.createOrFail(await worker.getAllInfo({timestamp: new Date()}));
+            console.log("getAllInfo result:\n", JSON.stringify(info, null, 2));
         }
-        catch(e)
+        catch (e)
         {
             console.error(e);
         }
-    }, 2000);*/
-})().catch(e => [console.error(0), process.exit(1)]);
+    }, 5000);
+})().catch(e =>
+{
+    console.error(e);
+    process.exit(1);
+});
