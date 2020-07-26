@@ -230,6 +230,8 @@ export class WorkerLikeThread extends EventEmitter
 
                 this.worker.on("message", handler);
             }
+            else
+                reject(new TaskExecutionException("Missing worker."));
         });
     }
 }
