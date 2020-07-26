@@ -1,2 +1,2 @@
-export * from "./Accesible";
+export * from "./Provide";
 export * from "./Thread";

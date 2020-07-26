@@ -1,11 +1,10 @@
 import { ChildProcess } from "child_process";
 import { TaskExecutionException } from "../exceptions/TaskExecutionException";
 import { ValidationException } from "typed-dto/lib/exceptions/ValidationException";
-import { DataTransferTypes } from "../types";
 
 type TaskHandler = {
-    args: DataTransferTypes
-    resultType: DataTransferTypes
+    args: any[]
+    resultType: any
     resolve: (...args: any[]) => any
     reject: (e: TaskExecutionException | ValidationException | Error) => any
 }
@@ -13,8 +12,15 @@ type TaskHandler = {
 export class BaseWorker
 {
     private _lastTaskId: number = 0;
-    private _process: ChildProcess;
+    private _process: ChildProcess | null = null;
     private _tasks: Record<string, TaskHandler> = {};
+
+    constructor()
+    {
+        this._onMessage = this._onMessage.bind(this);
+        this._onError = this._onError.bind(this);
+        this._onExit = this._onExit.bind(this);
+    }
 
     // Everything starts from here
     public run(): void
@@ -90,6 +96,9 @@ export class BaseWorker
 
     private _onError(err: Error)
     {
+        if(!this._process)
+            return;
+
         this._process.off("message", this._onMessage);
         this._process.off("exit", this._onExit);
 
@@ -105,6 +114,9 @@ export class BaseWorker
 
     private _onExit()
     {
+        if(!this._process)
+            return;
+
         this._process.off("message", this._onMessage);
         this._process.off("error", this._onError);
 

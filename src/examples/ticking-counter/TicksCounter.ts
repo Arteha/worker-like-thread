@@ -1,4 +1,4 @@
-import { Accesible, BaseWorker } from "../..";
+import { Provide, BaseWorker } from "../..";
 import { Thread } from "../..";
 import { InfoDTO } from "./dto/InfoDTO";
 import { TimeDTO } from "./dto/TimeDTO";
@@ -15,13 +15,13 @@ export class TicksCounter extends BaseWorker
         setInterval(() => this.tick(), 1000);
     }
 
-    @Accesible("number")
+    @Provide()
     public async getTicks(): Promise<number>
     {
         return this.ticks;
     }
 
-    @Accesible({args: TimeDTO, result: InfoDTO})
+    @Provide()
     public async getAllInfo(time: TimeDTO): Promise<InfoDTO>
     {
         return {

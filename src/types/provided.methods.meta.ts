@@ -1,0 +1,1 @@
+export type ProvidedMethodsMeta = Record<string, true>;

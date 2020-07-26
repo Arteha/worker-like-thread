@@ -31,25 +31,7 @@
       120
     ],
     "only-arrow-functions": false,
-    "member-ordering": [
-      true,
-      {
-        "order": [
-          "public-static-field",
-          "private-static-field",
-          "public-instance-field",
-          "private-instance-field",
-          "public-constructor",
-          "private-constructor",
-          "public-instance-method",
-          "protected-instance-method",
-          "private-instance-method",
-          "public-static-method",
-          "protected-static-method",
-          "private-static-method"
-        ]
-      }
-    ],
+    "member-ordering": false,
     "curly": false,
     "interface-name": [
       false
