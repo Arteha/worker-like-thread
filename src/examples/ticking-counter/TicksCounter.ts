@@ -1,10 +1,11 @@
-import { Provide, BaseWorker } from "../..";
-import { Worker } from "../../decorators";
+import { Worker, Provide } from "../../decorators";
 import { InfoDTO } from "./dto/InfoDTO";
 import { TimeDTO } from "./dto/TimeDTO";
+import { join } from "path";
+import { WorkerLikeThread } from "../../core/WorkerLikeThread";
 
-@Worker({ filePath: __filename })
-export class TicksCounter extends BaseWorker
+@Worker({ filePath: join(__dirname, __filename) })
+export class TicksCounter extends WorkerLikeThread
 {
     private startedAt: Date;
     private ticks: number = 0;

@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { BaseWorker } from "../core";
+import { WorkerLikeThread } from "../core";
 import { WORKER_SETTINGS_SYMBOL } from "../symbols/WORKER_SETTINGS_SYMBOL";
 import { WorkerSettings } from "../types";
 import { WorkerSettingsWithClassName } from "../types/worker.settings.with.class.name";
@@ -7,7 +7,7 @@ import { WorkerSettingsWithClassName } from "../types/worker.settings.with.class
 
 export function Worker(settings: WorkerSettings)
 {
-    return function <T extends { new(...args: any[]): BaseWorker }>(original: T): T
+    return function <T extends { new(...args: any[]): WorkerLikeThread }>(original: T): T
     {
         const settingsExtended: WorkerSettingsWithClassName = {
             ...settings,

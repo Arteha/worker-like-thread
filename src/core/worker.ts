@@ -1,5 +1,7 @@
-process.env.IS_WORKER_LIKE_THREAD = "YES";
-import { CrossProcessMessage, WorkerLikeThread } from "./WorkerLikeThread";
+import { WorkerExecutionException } from "../exceptions/WorkerExecutionException";
+
+process.env.WORKER_LIKE_THREAD = "YES";
+import { CrossProcessMessage } from "./WorkerLikeThread";
 
 let WorkerClass: any = null;
 let workerInstance: any = null;
@@ -21,25 +23,21 @@ process.on("message", async function(message: CrossProcessMessage)
 {
     if(message.type == "run")
     {
-        let requiredModule = require(message.data.filePath);
-        for (let n in requiredModule)
-        {
-            if(Object.getPrototypeOf(requiredModule[n]) == WorkerLikeThread)
-            {
-                WorkerClass = requiredModule[n];
-                break;
-            }
-        }
+        const requiredModule = require(message.data.filePath);
+        WorkerClass = requiredModule[message.data.className];
+
         if(!WorkerClass)
-            throw new Error("Failed to import your worker class.");
+            throw new WorkerExecutionException(`Failed to import worker class "${
+                message.data.className
+            }" from: "${
+                JSON.stringify(message.data.filePath)
+            }".`);
+
         workerInstance = new WorkerClass(...message.data.args);
         if(workerInstance)
             await workerInstance.run();
 
-        sendToMaster({
-            type: "started",
-            data: null
-        });
+        sendToMaster({type: "started", data: null});
     }
     else if(message.type == "execute-function")
     {
@@ -47,9 +45,9 @@ process.on("message", async function(message: CrossProcessMessage)
         {
             const result = await workerInstance[message.data.key](...message.data.args);
             sendToMaster({
-                type: "execution-result-function",
+                type: "function-execution-result",
                 data: {
-                    executionId: message.data.executionId,
+                    taskId: message.data.taskId,
                     value: result
                 }
             });
@@ -57,66 +55,17 @@ process.on("message", async function(message: CrossProcessMessage)
         catch(e)
         {
             sendToMaster({
-                type: "execution-error-function",
+                type: "function-execution-error",
                 data: {
-                    executionId: message.data.executionId,
-                    error: e.stack
-                }
-            });
-        }
-    }
-    else if(message.type == "execute-get")
-    {
-        try
-        {
-            const result = await workerInstance[message.data.key];
-            sendToMaster({
-                type: "execution-result-get",
-                data: {
-                    executionId: message.data.executionId,
-                    value: result
-                }
-            });
-        }
-        catch(e)
-        {
-            sendToMaster({
-                type: "execution-error-get",
-                data: {
-                    executionId: message.data.executionId,
-                    error: e.stack
-                }
-            });
-        }
-    }
-    else if(message.type == "execute-set")
-    {
-        try
-        {
-            workerInstance[message.data.key] = message.data.value;
-            const result = await workerInstance[message.data.key];
-            sendToMaster({
-                type: "execution-result-set",
-                data: {
-                    executionId: message.data.executionId,
-                    value: result
-                }
-            });
-        }
-        catch(e)
-        {
-            sendToMaster({
-                type: "execution-error-set",
-                data: {
-                    executionId: message.data.executionId,
-                    error: e.stack
+                    taskId: message.data.taskId,
+                    error: {
+                        message: e.message,
+                        stack: e.stack
+                    }
                 }
             });
         }
     }
 });
 
-sendToMaster({
-    type: "online",
-    data: null
-});
+sendToMaster({type: "online", data: null});

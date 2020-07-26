@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import { REMOTE_ACCESS_SYMBOL } from "../symbols/REMOTE_ACCESS_SYMBOL";
-import { BaseWorker } from "../core";
+import { WorkerLikeThread } from "../core/WorkerLikeThread";
 
 export function Provide()
 {
-    return function (target: BaseWorker, propertyKey: string | undefined): void
+    return function (target: WorkerLikeThread, propertyKey: string | undefined): void
     {
         if (propertyKey == undefined)
             throw new TypeError();
