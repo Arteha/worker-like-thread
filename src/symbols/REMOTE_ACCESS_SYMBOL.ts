@@ -1,0 +1,1 @@
+export const REMOTE_ACCESS_SYMBOL = Symbol("REMOTE_ACCESS_SYMBOL");

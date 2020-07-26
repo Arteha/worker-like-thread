@@ -1,9 +1,9 @@
 import { Provide, BaseWorker } from "../..";
-import { Thread } from "../..";
+import { Worker } from "../../decorators";
 import { InfoDTO } from "./dto/InfoDTO";
 import { TimeDTO } from "./dto/TimeDTO";
 
-@Thread
+@Worker({ filePath: __filename })
 export class TicksCounter extends BaseWorker
 {
     private startedAt: Date;

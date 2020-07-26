@@ -1,7 +1,6 @@
 import "reflect-metadata";
-import { ACCESSIBLE_SYMBOL } from "../symbols/ACCESSIBLE_SYMBOL";
+import { REMOTE_ACCESS_SYMBOL } from "../symbols/REMOTE_ACCESS_SYMBOL";
 import { BaseWorker } from "../core";
-import { ProvidedMethodsMeta } from "../types/provided.methods.meta";
 
 export function Provide()
 {
@@ -10,10 +9,6 @@ export function Provide()
         if (propertyKey == undefined)
             throw new TypeError();
 
-        const propsMeta = Reflect.getMetadata(ACCESSIBLE_SYMBOL, target);
-        const props: ProvidedMethodsMeta = propsMeta || {};
-        props[propertyKey] = true;
-        if(!propsMeta)
-            Reflect.defineMetadata(ACCESSIBLE_SYMBOL, props, target);
+        Reflect.defineMetadata(REMOTE_ACCESS_SYMBOL, true, target, propertyKey);
     };
 }

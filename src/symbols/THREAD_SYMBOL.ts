@@ -1,1 +1,0 @@
-export const THREAD_SYMBOL = Symbol("thread");

@@ -1,1 +1,1 @@
-export * from "./thread.meta";
+export * from "./worker.settings";
