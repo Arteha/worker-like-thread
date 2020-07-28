@@ -7,6 +7,8 @@ import { WorkerSettingsWithClassName } from "../types/worker.settings.with.class
 import { WorkerExecutionException } from "../exceptions/WorkerExecutionException";
 import { TaskExecutionException } from "../exceptions/TaskExecutionException";
 import { RemoteProperties } from "../types/remote.properties";
+import { Socket } from "../utils/Socket";
+
 
 export type Message<T, D> = {
     type: T
@@ -52,7 +54,7 @@ export type CrossProcessMessage = MessageToWorker | MessageToMaster;
 
 export class WorkerLikeThread extends EventEmitter
 {
-    private worker: ChildProcess | null = null;
+    private worker: ChildProcess | Socket | null = null;
     private executionIndex: number = 0;
     private _args: any[];
     private inMasterProcess: boolean = false;
@@ -108,40 +110,39 @@ export class WorkerLikeThread extends EventEmitter
             if (!settings)
                 throw new WorkerExecutionException("Execution fault. Probably you forgot to place @Worker(...) decorator.");
 
-            const self = this;
-            const that: any = this;
+            const self: any = this;
             const keys: RemoteProperties | undefined = Reflect.getMetadata(REMOTE_PROPERTIES_SYMBOL, this);
 
             for (let n in keys)
             {
-                if (typeof that[n] == "function")
-                    that[n] = async (...args: any[]) => await self._executeFunction(n, args);
+                if (typeof self[n] == "function")
+                    self[n] = async (...args: any[]) => await this._executeFunction(n, args);
                 else
                     throw new WorkerExecutionException(`Only functions can been executed remotely. Property "${n}" is not a function.`);
             }
-            that.emit = async (...args: any[]) => await self._executeFunction("emit", args);
+            self.emit = async (...args: any[]) => await this._executeFunction("emit", args);
 
             this.worker = fork(join(__dirname, "/worker"), [], {
                 env: {...process.env}
             });
 
-            function handler(message: CrossProcessMessage)
+            const handler = (message: CrossProcessMessage) =>
             {
                 if (message.type == "online")
                 {
-                    self.sendToWorker({
+                    this.sendToWorker({
                         type: "run",
                         data: {
                             filePath: settings!.filePath,
                             className: settings!.className,
-                            args: [...self._args]
+                            args: [...this._args]
                         }
                     });
                 }
                 else if (message.type == "started")
                 {
-                    if (self.worker)
-                        self.worker.off("message", handler);
+                    if (this.worker)
+                        this.worker.off("message", handler);
                     resolve();
                 }
             }
@@ -157,8 +158,10 @@ export class WorkerLikeThread extends EventEmitter
         if (this.worker)
         {
             this.worker.removeAllListeners();
-            if (!this.worker.killed)
+            if (!(this.worker instanceof Socket))
                 this.worker.kill();
+            else
+                this.worker.close();
         }
     }
 
@@ -170,14 +173,20 @@ export class WorkerLikeThread extends EventEmitter
 
     private sendToWorker(message: CrossProcessMessage): void
     {
-        if (this.worker && !this.worker.killed)
-            this.worker.send(message);
+        if (this.worker)
+        {
+            if(!(this.worker instanceof Socket) && this.worker.killed)
+                this.worker.send(JSON.stringify(message));
+            else if(this.worker instanceof Socket)
+                this.worker.send(JSON.stringify(message));
+        }
     }
 
-    private handleMessage(message: CrossProcessMessage): void
+    private handleMessage(message: string): void
     {
-        if (message.type == "emit-event")
-            (super.emit as any)(...message.data.args);
+        const msg: CrossProcessMessage = JSON.parse(message);
+        if (msg.type == "emit-event")
+            (super.emit as any)(...msg.data.args);
     }
 
     private generateTaskId(): number
