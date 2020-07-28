@@ -10,7 +10,7 @@
     "sourceMap": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "declaration": true,
     "declarationDir": "./lib",
     "outDir": "./lib"
