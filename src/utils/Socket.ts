@@ -33,4 +33,10 @@ export class Socket extends EventEmitter
         if(this.isOpen)
             this.io.send(message);
     }
+
+    public emit(event: string, ...args): boolean
+    {
+        this.io.emit(event, ...args);
+        return false;
+    }
 }

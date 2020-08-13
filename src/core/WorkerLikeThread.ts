@@ -178,15 +178,19 @@ export class WorkerLikeThread extends EventEmitter
             if(!(this.worker instanceof Socket) && this.worker.killed)
                 this.worker.send(JSON.stringify(message));
             else if(this.worker instanceof Socket)
-                this.worker.send(JSON.stringify(message));
+                this.worker.emit("message", JSON.stringify(message));
         }
     }
 
     private handleMessage(message: string): void
     {
-        const msg: CrossProcessMessage = JSON.parse(message);
-        if (msg.type == "emit-event")
-            (super.emit as any)(...msg.data.args);
+        try
+        {
+            const msg: CrossProcessMessage = JSON.parse(message);
+            if (msg.type == "emit-event")
+                (super.emit as any)(...msg.data.args);
+        }
+        catch (e) { }
     }
 
     private generateTaskId(): number
