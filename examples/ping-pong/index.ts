@@ -1,5 +1,4 @@
-import { TicksCounter } from "./TicksCounter";
-import { InfoDTO } from "./dto/InfoDTO";
+import { Player } from "./Player";
 import { sleep } from "./utils/sleep";
 
 
@@ -7,40 +6,26 @@ import { sleep } from "./utils/sleep";
 {
     console.log("Running worker...");
 
-    // Arguments(serializable!) can be also passed to the constructor
-    const worker = new TicksCounter(3000);
+    // Only serializable arguments can be passed
+    const player = new Player(2000);
 
     // Spawning in separate process
-    await worker.spawn();
+    await player.spawn();
 
     // Execution of provided function
-    await worker.run();
+    await player.run();
     console.log("Worker successfully started.");
 
-    worker.on("pong", async (count: number) =>
+    player.on("pong", async (count: number) =>
     {
         console.log("pong:", ++count);
         await sleep(1000);
-        worker.emit("ping", count);
+        player.emit("ping", count);
     });
 
-    worker.emit("ping", 0);
+    player.emit("ping", 0);
 
-    setInterval(async () =>
-    {
-        try
-        {
-            const ticks = await worker.getTicks();
-            console.log({ticks});
-
-            const info = InfoDTO.createOrFail(await worker.getAllInfo({timestamp: new Date()}));
-            console.log("getAllInfo result:\n", JSON.stringify(info, null, 2));
-        }
-        catch (e)
-        {
-            console.error(e);
-        }
-    }, 5000);
+    setTimeout(() => player.terminate(), 10000);
 })().catch(e =>
 {
     console.error(e);

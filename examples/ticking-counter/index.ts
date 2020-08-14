@@ -1,23 +1,20 @@
 import { TicksCounter } from "./TicksCounter";
 import { InfoDTO } from "./dto/InfoDTO";
-import { sleep } from "./utils/sleep";
 
 
 (async () =>
 {
     console.log("Running worker...");
-    const worker = new TicksCounter();
+
+    // Only serializable arguments can be passed
+    const worker = new TicksCounter(3000);
+
+    // Spawning in separate process
     await worker.spawn();
+
+    // Execution of provided function
+    await worker.run(1000);
     console.log("Worker successfully started.");
-
-    worker.on("pong", async (count: number) =>
-    {
-        console.log("pong:", ++count);
-        await sleep(1000);
-        worker.emit("ping", count);
-    });
-
-    worker.emit("ping", 0);
 
     setInterval(async () =>
     {
@@ -33,7 +30,10 @@ import { sleep } from "./utils/sleep";
         {
             console.error(e);
         }
-    }, 5000);
+    }, 3000);
+
+
+    setTimeout(() => process.exit(0), 10000);
 })().catch(e =>
 {
     console.error(e);
