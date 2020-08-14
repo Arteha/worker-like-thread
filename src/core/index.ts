@@ -1,1 +1,1 @@
-export * from "./WorkerLikeThread";
+export * from "./Threadlike";

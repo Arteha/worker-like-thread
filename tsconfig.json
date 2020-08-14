@@ -10,7 +10,7 @@
     "sourceMap": true,
     "noImplicitAny": false,
     "strictNullChecks": true,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "declaration": true,
     "declarationDir": "./lib",
     "outDir": "./lib"
@@ -20,7 +20,7 @@
   ],
   "exclude": [
     "node_modules",
-    "src/examples",
+    "examples",
     "lib"
   ]
 }

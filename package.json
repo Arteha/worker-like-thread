@@ -1,6 +1,6 @@
 {
   "name": "worker-like-thread",
-  "version": "v0.0.1",
+  "version": "v0.0.2",
   "description": "Implements a layer of async abstraction over workers giving possibility to interact without codding cross-process communication.",
   "keywords": [
     "thread",
@@ -10,8 +10,7 @@
     "nodejs thread",
     "threads",
     "workers",
-    "typescript",
-    "remote-worker"
+    "typescript"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

@@ -3,17 +3,18 @@ import { join } from "path";
 import { EventEmitter } from "events";
 import { REMOTE_PROPERTIES_SYMBOL } from "../symbols/REMOTE_PROPERTIES_SYMBOL";
 import { WORKER_SETTINGS_SYMBOL } from "../symbols/WORKER_SETTINGS_SYMBOL";
-import { WorkerSettingsWithClassName } from "../types/worker.settings.with.class.name";
+import { WorkerSpawnSettings } from "../types/worker.spawn.settings";
 import { WorkerExecutionException } from "../exceptions/WorkerExecutionException";
 import { TaskExecutionException } from "../exceptions/TaskExecutionException";
 import { RemoteProperties } from "../types/remote.properties";
+
 
 export type Message<T, D> = {
     type: T
     data: D
 }
 
-export type MessageRun = Message<"run", {
+export type MessageRun = Message<"construct", {
     filePath: string
     className: string
     args: any[]
@@ -50,20 +51,15 @@ export type MessageToMaster =
 
 export type CrossProcessMessage = MessageToWorker | MessageToMaster;
 
-export class WorkerLikeThread extends EventEmitter
+export class Threadlike extends EventEmitter
 {
     private worker: ChildProcess | null = null;
     private executionIndex: number = 0;
-    private _args: any[];
     private inMasterProcess: boolean = false;
 
-    /**
-     * @Description Don't forget to pass your args to super.
-     * */
-    constructor(...args: any[])
+    constructor()
     {
         super();
-        this._args = args;
 
         this.handleMessage = this.handleMessage.bind(this);
     }
@@ -85,63 +81,54 @@ export class WorkerLikeThread extends EventEmitter
     }
 
     /**
-     * @description Will be executed in child process on start.
-     * */
-    protected run(): void
-    {
-
-    }
-
-    /**
      * @description Execute this class in the child_process and provide magic
      * */
-    public async execute(): Promise<void>
+    public async spawn(): Promise<void>
     {
         if (this.inMasterProcess)
-            throw new WorkerExecutionException("Worker already executed.");
+            throw new WorkerExecutionException("Worker has been executed.");
 
         this.inMasterProcess = true;
 
         return new Promise<void>((resolve, reject) =>
         {
-            const settings: WorkerSettingsWithClassName | undefined = Reflect.getMetadata(WORKER_SETTINGS_SYMBOL, this);
+            const settings: WorkerSpawnSettings | undefined = Reflect.getMetadata(WORKER_SETTINGS_SYMBOL, this);
             if (!settings)
                 throw new WorkerExecutionException("Execution fault. Probably you forgot to place @Worker(...) decorator.");
 
-            const self = this;
-            const that: any = this;
+            const self: any = this;
             const keys: RemoteProperties | undefined = Reflect.getMetadata(REMOTE_PROPERTIES_SYMBOL, this);
 
             for (let n in keys)
             {
-                if (typeof that[n] == "function")
-                    that[n] = async (...args: any[]) => await self._executeFunction(n, args);
+                if (typeof self[n] == "function")
+                    self[n] = async (...args: any[]) => await this._executeFunction(n, args);
                 else
                     throw new WorkerExecutionException(`Only functions can been executed remotely. Property "${n}" is not a function.`);
             }
-            that.emit = async (...args: any[]) => await self._executeFunction("emit", args);
+            self.emit = async (...args: any[]) => await this._executeFunction("emit", args);
 
             this.worker = fork(join(__dirname, "/worker"), [], {
                 env: {...process.env}
             });
 
-            function handler(message: CrossProcessMessage)
+            const handler = (message: CrossProcessMessage) =>
             {
                 if (message.type == "online")
                 {
-                    self.sendToWorker({
-                        type: "run",
+                    this.sendToWorker({
+                        type: "construct",
                         data: {
                             filePath: settings!.filePath,
                             className: settings!.className,
-                            args: [...self._args]
+                            args: settings!.args
                         }
                     });
                 }
                 else if (message.type == "started")
                 {
-                    if (self.worker)
-                        self.worker.off("message", handler);
+                    if (this.worker)
+                        this.worker.off("message", handler);
                     resolve();
                 }
             }
@@ -157,8 +144,7 @@ export class WorkerLikeThread extends EventEmitter
         if (this.worker)
         {
             this.worker.removeAllListeners();
-            if (!this.worker.killed)
-                this.worker.kill();
+            this.worker.kill();
         }
     }
 
@@ -170,14 +156,17 @@ export class WorkerLikeThread extends EventEmitter
 
     private sendToWorker(message: CrossProcessMessage): void
     {
-        if (this.worker && !this.worker.killed)
-            this.worker.send(message);
+        if (this.worker)
+        {
+            if (!this.worker.killed)
+                this.worker.send(message);
+        }
     }
 
-    private handleMessage(message: CrossProcessMessage): void
+    private handleMessage(msg: CrossProcessMessage): void
     {
-        if (message.type == "emit-event")
-            (super.emit as any)(...message.data.args);
+        if (msg.type == "emit-event")
+            (super.emit as any)(...msg.data.args);
     }
 
     private generateTaskId(): number
@@ -193,6 +182,12 @@ export class WorkerLikeThread extends EventEmitter
         {
             if (this.worker)
             {
+                if(this.worker.killed)
+                {
+                    reject(new TaskExecutionException("Worker had been terminated."));
+                    return;
+                }
+
                 this.sendToWorker({
                     type: "execute-function",
                     data: {
