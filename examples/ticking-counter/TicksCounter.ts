@@ -1,27 +1,24 @@
-import { Worker, Provide } from "../../decorators";
+import { Worker, Provide } from "../../src/decorators";
 import { InfoDTO } from "./dto/InfoDTO";
 import { TimeDTO } from "./dto/TimeDTO";
-import { WorkerLikeThread } from "../../core";
+import { Threadlike } from "../../src/core";
 import { AsAttributes } from "typed-dto";
 
 @Worker({filePath: __filename})
-export class TicksCounter extends WorkerLikeThread
+export class TicksCounter extends Threadlike
 {
     private startedAt: Date = new Date();
     private ticks: number = 0;
 
-    protected run()
+    constructor(private readonly pongDelay: number)
     {
-        this.startedAt = new Date();
-        setInterval(() => this.tick(), 1000);
-
-        this.on("ping", this.onPing.bind(this));
+        super();
     }
 
-    private onPing(count: number)
+    @Provide()
+    public async run(interval: number): Promise<void>
     {
-        console.log("ping:", ++count);
-        this.emit("pong", count);
+        setInterval(() => this.tick(), interval);
     }
 
     @Provide()

@@ -1,25 +1,22 @@
 import { WorkerExecutionException } from "../exceptions/WorkerExecutionException";
-import { CrossProcessMessage } from "./WorkerLikeThread";
+import { CrossProcessMessage } from "./Threadlike";
 
 let WorkerClass: any = null;
 let workerInstance: any = null;
 
-function sendToMaster(message: CrossProcessMessage): any
+function sendToMaster(message: CrossProcessMessage): void
 {
     try
     {
         if(process.send)
             process.send(message);
     }
-    catch(e)
-    {
-
-    }
+    catch(e) { }
 }
 
 process.on("message", async function(message: CrossProcessMessage)
 {
-    if(message.type == "run")
+    if(message.type == "construct")
     {
         const requiredModule = require(message.data.filePath);
         WorkerClass = requiredModule[message.data.className];
@@ -32,7 +29,6 @@ process.on("message", async function(message: CrossProcessMessage)
             }".`);
 
         workerInstance = new WorkerClass(...message.data.args);
-        workerInstance.run();
 
         sendToMaster({type: "started", data: null});
     }

@@ -6,8 +6,15 @@ import { sleep } from "./utils/sleep";
 (async () =>
 {
     console.log("Running worker...");
-    const worker = new TicksCounter();
-    await worker.execute();
+
+    // Arguments(serializable!) can be also passed to the constructor
+    const worker = new TicksCounter(3000);
+
+    // Spawning in separate process
+    await worker.spawn();
+
+    // Execution of provided function
+    await worker.run();
     console.log("Worker successfully started.");
 
     worker.on("pong", async (count: number) =>
